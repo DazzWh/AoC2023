@@ -1,1 +1,1 @@
-﻿Day4.Day4.Run();
+﻿Day4.Day4Part2.Run();
