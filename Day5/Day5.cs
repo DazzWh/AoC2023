@@ -4,13 +4,9 @@ using System.Text.RegularExpressions;
 namespace Day5
 {
     internal class Day5
-    { 
+    {
         public void Run()
         {
-            Console.WriteLine("Running solution...");
-            var timer = new Stopwatch();
-            timer.Start();
-            
             var input = File.ReadAllLines("Day5Input.txt").ToList();
 
             var seeds = input[0]
@@ -20,98 +16,33 @@ namespace Day5
                 .ToArray();
 
             input.RemoveRange(0, 2);
-            
+
             var maps = CompileMaps(input);
 
-            var checkChunkSize = maps
-                .Select(am => am.Ranges)
-                .Select(rl => rl.Min(r => r.Range))
-                .Min();
-            
-            checkChunkSize /= 6;
-            
-            // Optimization logging.
-            var totalSeeds = seeds.Where((x, i) => i % 2 != 0).Sum();
-            long seedsDone = 0;
-            long seedCheckAmount = 200000000;
-            var seedsNextCheck = seedCheckAmount;
-            
             var lowestLocation = long.MaxValue;
-            for (var i = 0; i < seeds.Length; i+=2)
+            foreach (var seed in seeds)
             {
-                var seed = seeds[i];
-                var range = seeds[i + 1];
-                
-                Console.WriteLine($"Calculating seed location: {seed} for {range} range...");
-
-                for (long j = 0; j < range; j++)
+                var location = seed;
+                foreach (var map in maps)
                 {
-                    long locationNumber;
-                    
-                    if (j + checkChunkSize < range)
-                    {
-                        var firstLocationNumber = GetSeedLocationNumber(seed + j, maps);
-                        var lastLocationNumber = GetSeedLocationNumber(seed + j + checkChunkSize, maps);
+                    var range = map.Ranges
+                        .FirstOrDefault(r => location.IsBetween(r.SourceStart, r.SourceStart + r.Range));
 
-                        if (firstLocationNumber == lastLocationNumber - checkChunkSize)
-                        {
-                            j += checkChunkSize;
-                            locationNumber = Math.Min(firstLocationNumber, lastLocationNumber);
-                            
-                            seedsDone += checkChunkSize;
-                        }
-                        else
-                        {
-                            locationNumber = Math.Min(firstLocationNumber, lastLocationNumber);
-                            seedsDone++;
-                        }
-                    }
-                    else
+                    if (range != null)
                     {
-                        locationNumber = GetSeedLocationNumber(seed + j, maps);
-                        
-                        seedsDone++;
-                    }
-                    
-                    
-                    if (locationNumber < lowestLocation)
-                    {
-                        lowestLocation = locationNumber;
-                    }
-                    
-                    
-                    if (seedsDone > seedsNextCheck)
-                    {
-                        seedsNextCheck += seedCheckAmount;
-                        Console.WriteLine($"Seeds completed: {seedsDone}/{totalSeeds} complete at {timer.Elapsed}...");
+                        location = range.DestinationStart + location - range.SourceStart;
                     }
                 }
+
+                if (location < lowestLocation)
+                {
+                    lowestLocation = location;
+                }
             }
-            
-            Console.WriteLine($"Seeds completed: {seedsDone}/{totalSeeds}");
             
             Console.WriteLine($"Solution answer: {lowestLocation}");
-            
-            timer.Stop();
-            Console.WriteLine($"Total time taken: {timer.Elapsed}");
         }
-
-        private static long GetSeedLocationNumber(long seed, List<AlmanacMap> maps)
-        {
-            foreach (var map in maps)
-            {
-                var range = map.Ranges
-                    .FirstOrDefault(r => seed.IsBetween(r.SourceStart, r.SourceStart + r.Range));
-
-                if (range != null)
-                {
-                    seed = range.DestinationStart + seed - range.SourceStart;
-                }
-            }
-            
-            return seed;
-        }
-
+        
         private static List<AlmanacMap> CompileMaps(List<string> input)
         {
             var maps = new List<AlmanacMap>();
