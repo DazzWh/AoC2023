@@ -7,10 +7,6 @@ namespace Day5
     {
         public void Run()
         {
-            Console.WriteLine("Running solution...");
-            var timer = new Stopwatch();
-            timer.Start();
-
             var input = File.ReadAllLines("Day5Input.txt").ToList();
 
             var seeds = input[0]
@@ -28,13 +24,7 @@ namespace Day5
                 .Select(rl => rl.Min(r => r.Range))
                 .Min();
 
-            checkChunkSize /= 6;
-
-            // Optimization logging.
-            var totalSeeds = seeds.Where((x, i) => i % 2 != 0).Sum();
-            long seedsDone = 0;
-            long seedCheckAmount = 200000000;
-            var seedsNextCheck = seedCheckAmount;
+            checkChunkSize /= 6; // If this is too high, then it's often out of range and actually goes slower.
 
             var lowestLocation = long.MaxValue;
             for (var i = 0; i < seeds.Length; i += 2)
@@ -42,35 +32,36 @@ namespace Day5
                 var seed = seeds[i];
                 var range = seeds[i + 1];
 
-                Console.WriteLine($"Calculating seed location: {seed} for {range} range...");
-
                 for (long j = 0; j < range; j++)
                 {
                     long locationNumber;
-
+                    
+                    // Check a whole chunk if we can.
                     if (j + checkChunkSize < range)
                     {
                         var firstLocationNumber = GetSeedLocationNumber(seed + j, maps);
                         var lastLocationNumber = GetSeedLocationNumber(seed + j + checkChunkSize, maps);
 
+                        // If the start of the chunk, and the end of the chunk
+                        // Have the "same" value
+                        // (follows the same route and ends up being lastLocationNumber - checkChunkSize)
                         if (firstLocationNumber == lastLocationNumber - checkChunkSize)
                         {
+                            // Then we don't need to check anything in between these values, 
+                            // and can skip j up a whole chunk size.
                             j += checkChunkSize;
                             locationNumber = Math.Min(firstLocationNumber, lastLocationNumber);
-
-                            seedsDone += checkChunkSize;
                         }
                         else
                         {
+                            // If they are not the same though, we need to not move up, and check incrementally again.
                             locationNumber = Math.Min(firstLocationNumber, lastLocationNumber);
-                            seedsDone++;
                         }
                     }
                     else
                     {
+                        // And if we're near the end of the range, check incrementally.
                         locationNumber = GetSeedLocationNumber(seed + j, maps);
-
-                        seedsDone++;
                     }
 
 
@@ -78,22 +69,10 @@ namespace Day5
                     {
                         lowestLocation = locationNumber;
                     }
-
-
-                    if (seedsDone > seedsNextCheck)
-                    {
-                        seedsNextCheck += seedCheckAmount;
-                        Console.WriteLine($"Seeds completed: {seedsDone}/{totalSeeds} complete at {timer.Elapsed}...");
-                    }
                 }
             }
 
-            Console.WriteLine($"Seeds completed: {seedsDone}/{totalSeeds}");
-
             Console.WriteLine($"Solution answer: {lowestLocation}");
-
-            timer.Stop();
-            Console.WriteLine($"Total time taken: {timer.Elapsed}");
         }
 
         private static long GetSeedLocationNumber(long seed, List<AlmanacMap> maps)
