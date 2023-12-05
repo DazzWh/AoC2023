@@ -1,4 +1,5 @@
-﻿new Day5.Day5().Run();
+﻿
+new Day5.Day5().Run();
 
 public class AlmanacMap(string source, string destination)
 {
