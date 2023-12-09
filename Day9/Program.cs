@@ -1,9 +1,7 @@
-﻿
-
-var input = 
+﻿var input = 
     File.ReadAllLines("Input.txt")
-    .Select(s => s.Split(' ').Select(int.Parse).ToList())
-    .ToList();
+        .Select(s => s.Split(' ').Select(int.Parse).ToList())
+        .ToList();
 
 var nextValues = new List<int>();
 
@@ -20,26 +18,25 @@ foreach (var valueHistory in input)
         currentDiff = differences.Last();
     }
     
-    // Add a new X on the end of each line (except a 0 to the lowest)
-    
-    differences.Last().Add(0);
+    // Add a new X to the start of each line (except a 0 to the lowest)
+    differences.Last().Insert(0, 0);
     
     foreach (var diffList in differences[..^1]) // All but the last
     {
-        diffList.Add(-1); // Should be irrelevant what this is.
+        diffList.Insert(0, -1); // Should be irrelevant what this is.
     }
     
     // Fill in the added numbers
     for (var i = differences.Count - 2; i >= 0; i--)
     {
-        var valueLeft = differences[i][^2];
-        var valueBelow = differences[i + 1].Last();
-        var value = valueLeft + valueBelow;
+        var valueRight = differences[i][1];
+        var valueBelow = differences[i + 1].First();
+        var value = valueRight - valueBelow;
 
-        differences[i][^1] = value;
+        differences[i][0] = value;
     }
     
-    nextValues.Add(differences.First().Last());
+    nextValues.Add(differences.First().First());
 }
 
 Console.WriteLine(string.Join(',', nextValues));
